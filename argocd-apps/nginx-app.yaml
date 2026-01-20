@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx-demo
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  
+  # Source - your Git repository
+  source:
+    repoURL: https://github.com/berezovsky13/argo.git
+    targetRevision: main
+    path: clusters/my-eks-cluster/applications/nginx
+  
+  # Destination - your workload cluster
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nginx-demo
+  
+  # Sync policy - automated GitOps
+  syncPolicy:
+    automated:
+      prune: true       # Delete resources when removed from Git
+      selfHeal: true    # Revert manual changes to match Git
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
